@@ -1,0 +1,43 @@
+//This flow launches specific authentication flows based on the user's MFA preference and
+//his already enrolled credentials. This data is passed in the input parameters
+//It returns a positive value when any authentication flow finished successfully, or a 
+//negative value if there were more than 5 failed authentication attempts
+
+Flow io.jans.agamaLab.authenticator
+    Basepath "authn"
+    Inputs userData mfaInfo
+
+//mfaInfo is an instance of class io.jans.agamalab.MFAUserInfo
+method = mfaInfo.preference
+
+When method is null     //pick the first if no preference has been defined
+    method = mfaInfo.enrolledMethods[0]
+
+Repeat 3 times max     //More than three failed attempts sounds suspicious 
+
+    //Launch the given authn flow using the UI templates defined in this project where possible
+    Log "Launching flow" method
+    obj | E = Trigger $method userData true
+        Override templates
+        "kz1vc3/authn/fido-authn.ftlh" "fido/fido-authn.ftlh"
+        "kz1vc3/authn/code.ftlh" "otp/code.ftlh"
+        "kz1vc3/authn/sg/notification.ftlh" "sg/notification.ftlh"
+        "kz1vc3/authn/sg/code-scan.ftlh" "sg/code-scan.ftlh"
+    
+    When E is not null
+        Log "@e Authentication flow % for user % crashed: %" method userData.inum E
+        E = null
+        message = "We had trouble authenticating you. Try another option from the list"
+    Otherwise
+        When obj.success is true
+            Finish true
+            
+        message = obj.message
+        
+    obj = { enrolledMethods: mfaInfo.enrolledMethods, message: message }
+    //Show a page where the user can select the type of credential he wants to use
+    obj = RRF "selector.ftlh" obj
+    method = obj.selection
+
+obj = { success: false, error: "Those were too many attempts. Try again later" }
+Finish obj

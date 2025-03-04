@@ -1,0 +1,41 @@
+//This flow presents three options from the UI: a) initiate login for an existing account
+//(prompting for an already registered e-mail), b) use github to login externally,
+//and c) trigger a registration process
+//The param emailHint may contain an e-mail value to pre-populate the form for option (a)
+//The boolean param captureLocation determines if location, zone, and user's device
+//information should be automatically stored in hidden form fields for option (a)
+//A positive value is returned if option (a) is taken and additionally the following data
+//is attached for the user in question: uid, inum, name, and email
+//A negative value is returned if options (b) or (c) are taken
+
+Flow io.jans.agamaLab.signIn
+    Basepath "agamalab"
+    Inputs emailHint captureLocation
+
+obj = { email: emailHint, captureLocation: captureLocation }
+Repeat 4 times max
+    obj = RRF "main.ftlh" obj
+    
+    //github authentication button clicked?
+    When obj.githubSignIn is ""
+        obj = { success: false, data: { jumpTo: "GH" } }
+        Finish obj
+        
+    //sign up button clicked?
+    When obj.signUp is ""
+        obj = { success: false, data: { jumpTo: "signUp" } }
+        Finish obj
+
+    //Obtain details of the account matching the provided e-mail
+    userData = Call io.jans.agamalab.IdentityProcessor#accountFromEmail obj.email
+    
+    When userData.empty is true     //this is signIn path sucker, go and sign up!
+        obj.message = "E-mail not recognized. Don't have an account yet?"
+    Otherwise         
+        //attach contextual data
+        userData.context = { location: obj.location, timeZone: obj.zone, device: obj.device }
+
+        obj = { success: true, data: userData }
+        Finish obj
+
+Finish false

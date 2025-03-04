@@ -1,0 +1,99 @@
+/* ===================================== Import Variables ================================== */
+@import url(https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700);
+@import url(https://fonts.googleapis.com/css?family=Arimo:300,400,400italic,700,700italic);
+
+@import url('https://fonts.cdnfonts.com/css/mona-sans');
+
+/* ===================================== Basic CSS ==================================== */
+* {
+	margin: 0px;
+	padding: 0px;
+	list-style: none;
+}
+
+body {
+	font-family: 'Mona-Sans', sans-serif;
+	font-family: 'Mona Sans', sans-serif;
+	background: url(assets/agama-lab-background.jpg);
+	background-size: cover;
+	background-repeat: no-repeat;
+}
+
+img {
+	max-width: 100%;
+}
+
+a {
+	text-decoration: none;
+	outline: none;
+	color: #444;
+}
+
+a:hover {
+	color: #444;
+}
+
+a:hover,
+a:focus,
+input,
+textarea {
+	text-decoration: none;
+	outline: none;
+}
+
+img.logo {
+	width: 270px;
+	margin: 0 auto;
+	display: block;
+}
+
+h2.main-head {
+	font-size: 2rem;
+	color: #0A2540;
+	font-weight: 700;
+	line-height: 42px;
+	margin-bottom: 0px;
+	text-align: center;
+}
+
+::placeholder {
+	color: #425466;
+	font-size: 15px;
+	font-weight: 500;
+}
+
+.form-control {
+	background: #fff;
+	border: solid 2px #dbdbdb;
+	border-radius: 50px;
+}
+
+.col-form-label {
+	color: #0A2540;
+	font-size: 1.25rem;
+	font-weight: 700;
+}
+
+.form-select {
+	border: solid 2px #dbdbdb;
+	border-radius: 50px;
+	font-weight: 400;
+}
+
+.btn {
+	font-weight: 700;
+	font-size: 1.25rem;
+}
+
+.btn-link {
+	color: #00A65D;
+}
+
+p {
+	font-size: 1.25rem;
+}
+
+.required:after {
+	content: "  *";
+	color: red;
+}

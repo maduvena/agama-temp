@@ -1,0 +1,36 @@
+//Verifies the possession of an e-mail address by sending a random passcode. The address is
+//passed through an input parameter
+//This flow returns a positive value if verification passed, or a negative value if several
+//wrong codes were entered, or if e-mail delivery failed
+
+Flow io.jans.agamaLab.emailVerification
+    Basepath "email-verify"
+    Inputs email existingAccount context
+
+obj = {}
+sendMail = true
+Repeat 3 times max
+
+    When sendMail is true
+        sendMail = false
+        otpCode = Call io.jans.agamalab.EmailUtils#sendOTP email context
+
+        When otpCode is null
+            obj = { success: false, error: "Unable to deliver e-mail message" }
+            Finish obj
+
+    obj.email = email
+    obj.accountExists = existingAccount
+    obj = RRF "otp.ftlh" obj
+
+    When obj.resend is ""       //user clicked on "resend code" button
+        sendMail = true
+        obj.resent = true
+    Otherwise
+        When obj.passcode is otpCode
+            Finish true
+        obj.matches = false     //wrong code entered
+        obj.resent = false
+
+obj = { success: false, error: "You have exceeded the number of attempts allowed" }
+Finish obj

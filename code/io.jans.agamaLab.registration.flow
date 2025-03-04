@@ -1,0 +1,83 @@
+//This flow provisions a new user account in the server. The input parameter "profile" is
+//a map that can hold some user attributes; key names must match physical "ldap" names,
+//e.g. givenName, sn, etc.  Optionally an external identifier can also be passed in param 
+//extUid: an identifier that helps mapping this user to his identity at an external system.
+//The flow shows a pre-filled form for users to edit and complete their data. In case
+//profile contains a key named "email" with non-empty value, his e-mail won't be prompted.
+//Conversely, if missing, the e-mail is prompted and a subsequent verification process is
+//carried out (an OTP sent to the user's inbox)
+//A positive value is returned if provisioning was successful. Additional data is
+//attached in a map with keys inum (assigned user identifier), email, uid (same as email),
+//and name (user's given name). A negative value is returned in case the user chose the
+//"Already have an account?" option or if the actual account provisioning failed
+
+Flow io.jans.agamaLab.registration
+    Basepath "agamalab"
+    Configs conf
+    Inputs profile extUid captureLocation
+
+origEmail = profile.email
+profile.captureLocation = captureLocation
+profile.recaptcha = conf.recaptcha
+
+Repeat 4 times max
+    data = RRF "profile.ftlh" profile
+    
+    When data.signIn is ""   //Abort and take sign-in route
+        obj = { success: false, data: { jumpTo: "signIn" } }
+        Finish obj
+    
+    When origEmail is null
+        email = data.email
+    Otherwise
+        email = origEmail      //cheating prevention
+        
+    flag = Call io.jans.agamalab.EmailUtils#isDummy email
+
+    When flag is true
+        profile.message = "Sorry, we don't accept registrations from this e-mail provider"
+    Otherwise
+
+        //Obtain details of the account matching the given e-mail
+        userData = Call io.jans.agamalab.IdentityProcessor#accountFromEmail email
+
+        When userData.empty is true
+            profile.message = null
+        Otherwise
+            //this is signUp path sucker, go and sign in!
+            profile.message = "There is an account already associated to the e-mail provided!"
+        
+    Quit When profile.message is null
+
+When profile.message is not null
+    Finish false
+
+data.mail = email       //physical name needed (see call to onboard method) 
+data.uid = email        //hmmm...
+
+When origEmail is null    //run verification process
+    context = { location: data.location, timeZone: data.zone, device: data.device }
+    obj = Trigger io.jans.agamaLab.emailVerification email false context
+
+    When obj.success is false
+        Finish obj
+        
+    Log "E-mail verification passed, initiating user provisioning"
+
+//The below are physical DB attributes
+keys = [ "uid", "mail", "givenName", "sn", "o", "c", "jansTitle", "jansProfileURL", "role" ]
+inum | E = Call io.jans.agamalab.IdentityProcessor#onboard data keys extUid
+
+When E is null
+    Log "User % has been created" inum
+    Call io.jans.agamalab.zoho.ZohoLeadsManager#insert conf.zohoCRM data
+    obj = { success: true, data: { inum: inum, uid: data.uid, email: email, name: data.givenName } }
+    Finish obj
+
+msg = "An error ocurred while creating the user."
+Log "@e " msg E
+
+msg = [ msg, E.message ]
+msg = Call java.lang.String#join " " msg 
+obj = { success: false, error: msg }
+Finish obj

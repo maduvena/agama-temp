@@ -1,0 +1,65 @@
+//This flow authenticates the user at Github and obtains some of his profile data. Then, a
+//registration flow is triggered where profile completion takes place and the user is
+//onboarded onto the local user database. Profile completion & onboarding only occurs once.
+//If the process is successful a positive value is returned with the following data attached:
+//inum (internal user identifier), uid (equal to user's e-mail), ghUserName (github's handle), 
+//ghAccessToken (token supplied by Github upon authn), ghRefreshToken, and name (user's given name)
+//A negative value is returned if profile data could not be grabbed from github, or if
+//e-mail was not obtained, or the onboarding failed
+//As an exception, if a non-null value is passed for input param encInum, no registration takes
+//place but the local user referenced by the (encrypted) inum is "linked" to the github user by
+//populating attribute jansExtUid. Data attached has ghUserName, ghAccessToken, ghRefreshToken,
+//and userId (equal to uid) - this is a "top-level flow" usage
+//Params required for Github authentication are supplied in the config parameter oauthParams
+//See https://github.com/JanssenProject/jans/blob/main/docs/agama-catalog/jans/inboundID/README.md
+//Note this flow is not the same as the Github flow regarded in that doc page
+
+Flow io.jans.agamaLab.githubAuthn
+    Basepath ""
+    Configs oauthParams
+    Inputs encInum
+
+Log "Initiating external authentication at Github website"
+obj = Trigger io.jans.inbound.oauth2.AuthzCodeWithUserInfo oauthParams
+
+When obj.success is true
+    token = obj.data.tokenResponse.access_token
+    rtoken = obj.data.tokenResponse.refresh_token
+
+    profile = obj.data.profile
+    ghHandle = profile.login
+
+    When profile.email is null
+        profile.email = Call io.jans.agamalab.gh.EmailRetriever#get token
+        
+        When profile.email is null
+            obj = { success: false, error: "E-mail not released for this user" }
+            Finish obj
+
+    When encInum is not null
+        uid = Call io.jans.agamalab.IdentityProcessor#link encInum true ghHandle true
+        obj = { success: true, data: { userId: uid } }
+
+    Otherwise
+        //Determine if this user is already registered
+        acctDetails = Call io.jans.agamalab.IdentityProcessor#remoteAccountDetails ghHandle profile.email
+
+        When acctDetails is null
+            Log "Incoming user not recognized, initiating user provisioning flow"
+            extId = Call io.jans.agamalab.IdentityProcessor#externalIdOf ghHandle
+            obj = Trigger io.jans.agamaLab.registration profile extId false
+        Otherwise
+            //Update external ID if its value is not yet populated
+            Call io.jans.agamalab.IdentityProcessor#link acctDetails.inum false ghHandle false        
+            obj = { success: true, data: acctDetails }
+
+    When obj.success is true
+        When rtoken is not null
+            obj.data.ghRefreshToken = rtoken
+
+        obj.data.ghAccessToken = token
+        obj.data.ghUserName = ghHandle
+    
+    Finish obj
+
+Finish false

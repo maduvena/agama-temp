@@ -1,0 +1,178 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #ffffff;
+}
+
+section {
+    padding: 20px;
+}
+
+.hero-section {
+    display: block;
+    background-image: url('OTP-banner-scaled.jpg');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    text-align: center;
+    padding: 100px 0px;
+}
+
+.hero-section .logo {
+    width: 220px;
+    padding-bottom: 100px;
+}
+
+.login {
+    background: #ffffff;
+    display: block;
+    width: 680px;
+    border-radius: 20px;
+    margin: 0 auto;
+    margin-top: 40px;
+    padding: 40px;
+}
+
+.hero-section h2 {
+    color: #0A2540;
+    font-family: 'Poppins';
+    font-size: 38px;
+    font-weight: 500;
+    margin: 0;
+    padding: 0;
+}
+
+.login .icon {
+    width: 140px;
+    padding: 40px;
+}
+
+.login .login-form {
+    padding-bottom: 20px;
+}
+
+.login-form label {
+    display: block;
+    font-family: 'Poppins';
+    font-size: 18px;
+    font-weight: 500;
+    text-align: left;
+    padding-bottom: 10px;
+}
+
+.login-form input[type="text"],
+.login-form input[type="submit"] {
+    display: block;
+    width: 100%;
+    border-radius: 30px;
+    margin: 8px 0;
+    padding: 18px 30px;
+    box-sizing: border-box;
+}
+
+.login-form input[type="text"] {
+    font-family: 'Poppins';
+    font-size: 15px;
+    font-weight: 500;
+    border: 1px solid #DBDBDB;
+    margin-bottom: 30px;
+}
+
+.login-form input[type="email"]:hover,
+.login-form input[type="email"]:focus {
+    border-color: #00a65d;
+}
+
+.login-form input[type="password"]::placeholder {
+    color: #425466;
+    font-family: 'Poppins';
+    font-weight: 300;
+    text-align: center;
+    letter-spacing: 30px;
+}
+
+.login-form input[type="submit"] {
+    background: #00A65D;
+    color: #FFFFFF;
+    font-family: 'Poppins';
+    font-size: 17px;
+    font-weight: 600;
+    border: none;
+    margin-bottom: 30px;
+    padding: 18px 30px;
+}
+
+.login-form input[type="submit"]:hover,
+.login-form input[type="submit"]:focus {
+    cursor: pointer;
+    background: #ffffff;
+    color: #00a65d;
+    border: 2px solid #00a65d;
+    padding: 16px 30px;
+}
+
+.login p {
+    color: #000000;
+    font-family: 'Poppins';
+    font-size: 16px;
+    padding: 0px;
+    margin-bottom: 5px;
+}
+
+.login a {
+    font-family: 'Poppins';
+    font-size: 16px;
+    color: #00A65D;
+}
+
+.login a:hover {
+    text-decoration: none;
+}
+
+@media screen and (max-width: 1024px) {
+    .hero-section .logo {
+        padding-bottom: 20px;
+    }
+}
+
+@media screen and (max-width: 900px) {
+
+    .login {
+        width: 580px;
+    }
+}
+
+@media screen and (max-width: 600px) {
+    .hero-section .container {
+        padding: 20px;
+    }
+
+    .hero-section h2 {
+        font-size: 26px;
+    }
+
+    .login {
+        width: auto;
+    }
+
+}
+
+@media screen and (max-width: 480px) {
+    .hero-section p {
+        font-size: 16px;
+    }
+
+    .login {
+        padding: 20px;
+    }
+
+    .login .icon {
+        width: 100px;
+        padding: 20px;
+    }
+
+    .login .login-form {
+        padding-bottom: 0px;
+    }
+}

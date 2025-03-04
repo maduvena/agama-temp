@@ -1,0 +1,69 @@
+//The top-level flow that implements the "Gluu Cloud" identity journey
+Flow io.jans.agamaLab.main
+    Basepath "agamalab"
+    Timeout 360 seconds
+    Configs conf
+    Inputs emailHint
+
+Log "Identity journey started"
+loca = conf.captureLocation
+empty = { }
+jumpTo = "signIn"
+
+Repeat 4 times max
+
+    Match jumpTo to
+        "signIn"
+            obj = Trigger io.jans.agamaLab.signIn emailHint loca
+
+        "signUp"
+            obj = Trigger io.jans.agamaLab.registration empty null loca
+
+        "GH"
+            obj = Trigger io.jans.agamaLab.githubAuthn null
+            
+            When obj.success is true
+                //Authenticate the user identified by the given uid and terminate
+                obj.data.userId = obj.data.uid
+            
+            Finish obj
+
+    nextJump = null
+    gata = obj.data
+
+    When obj.success is false and gata is not null
+        nextJump = gata.jumpTo
+        
+    Quit When nextJump is null        
+    jumpTo = nextJump
+
+When obj.success is false
+    Finish obj
+    
+userData = obj.data
+uid = userData.uid
+Log "User e-mail is" userData.email
+
+When jumpTo is "signUp"
+    msg = [ userData.name, ", your account has been created!" ]
+    msg = Call java.lang.String#join "" msg
+    
+    obj = Trigger io.jans.agamaLab.credsEnrollment userData conf false msg
+Otherwise
+    obj = Trigger io.jans.agamaLab.credsEnrollment userData conf true null
+
+When obj.success is true
+
+    Call io.jans.agamalab.IdentityProcessor#updateRole uid "wpStudent"
+
+    When obj.data.hadEnoughCreds is false
+        //let the user in, he just finished enrolling his creds
+        Finish uid
+
+    //Challenge the user to present his creds
+    obj = Trigger io.jans.agamaLab.authenticator userData obj.data.mfaInfo
+    When obj.success is true
+        Finish uid
+
+//Fail if credential enrollment or authenticator flow failed 
+Finish obj
