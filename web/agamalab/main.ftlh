@@ -53,7 +53,17 @@
 		  </div>
 		</div>
 	  </form>
-	   <form method="post" enctype="application/x-www-form-urlencoded">
+	  <form method="post" enctype="application/x-www-form-urlencoded">
+		<div class="mb-4 row">
+		  <div class="col">
+			<hr>
+		  </div>
+		  <div class="col-auto">OR
+		  </div>
+		  <div class="col">
+			<hr>
+		  </div>
+		</div>
 		<div class="mb-4 row">
 		  <div class="col-md-12 d-flex">
 			<button type="submit" name="passkey" value="" class="btn btn-dark px-4 flex-fill">
